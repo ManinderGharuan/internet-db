@@ -10,9 +10,9 @@ class Domain(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
-    creation_date = Column(DateTime, nullable=False)
-    last_update_date = Column(DateTime, nullable=False)
-    expiration_date = Column(DateTime, nullable=False)
+    creation_date = Column(DateTime)
+    last_update_date = Column(DateTime)
+    expiration_date = Column(DateTime)
     person_id = Column(Integer, ForeignKey('person.id'))
     registrar_id = Column(Integer, ForeignKey('registrar.id'))
     referral_url = Column(String(100))

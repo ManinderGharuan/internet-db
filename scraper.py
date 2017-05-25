@@ -1,7 +1,4 @@
-from whois import whois
 from db import get_session
-from scrapers.top_1mScraper import top_1mScraper
-from scrapers import top_1million_sitesScraper
 from models.Country import Country
 from models.State import State
 from models.City import City
@@ -17,18 +14,6 @@ from models.Domain import Domain
 from models.DomainNameServers import DomainNameServers
 
 session = get_session()
-
-
-def run_scraper():
-    for data in top_1mScraper():
-        print("Saving Data from", data)
-
-        save_internet_data(whois(data))
-
-    for data in top_1million_sitesScraper():
-        print("Saving Data from", data)
-
-        save_internet_data(whois(data))
 
 
 def save_internet_data(data):
