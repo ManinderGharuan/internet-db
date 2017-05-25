@@ -22,18 +22,17 @@ def import_csv(path):
 
     try:
         with open(file) as csvfile:
-            read = reader(csvfile)
+            csv_reader = reader(csvfile)
 
-            for row in read:
-                click.echo(row[1])
+            with click.progressbar(iterable=csv_reader, show_pos=True) as bar:
+                for row in bar:
+                    domain = session.query(Domain) \
+                                    .filter(Domain.name == row[1]).first()
 
-                domain = session.query(Domain).filter(Domain.name == row[1])\
-                                              .first()
-
-                if not domain:
-                    domain = Domain(name=row[1])
-                    session.add(domain)
-                    session.commit()
+                    if not domain:
+                        domain = Domain(name=row[1])
+                        session.add(domain)
+                        session.commit()
     except OSError as error:
         print("Error in import path: ", error)
     finally:
