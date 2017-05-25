@@ -1,4 +1,3 @@
-from db import get_session
 from models.Country import Country
 from models.State import State
 from models.City import City
@@ -13,10 +12,8 @@ from models.NameServer import NameServer
 from models.Domain import Domain
 from models.DomainNameServers import DomainNameServers
 
-session = get_session()
 
-
-def save_internet_data(data):
+def save_internet_data(data, session):
     country_code = data['country']
     country = None
     state = data['state']
@@ -145,6 +142,3 @@ def save_internet_data(data):
 
             session.add(dns)
             session.commit()
-
-
-session.close()

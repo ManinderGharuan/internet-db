@@ -3,8 +3,9 @@ import os
 from csv import reader
 import click
 from whois import whois
-from scraper import save_internet_data, session
+from scraper import save_internet_data
 from models.Domain import Domain
+from db import get_session
 
 
 @click.group()
@@ -17,6 +18,7 @@ def cli():
 def import_csv(path):
     """Import file and save domains in database"""
     file = os.path.abspath(path)
+    session = get_session()
 
     try:
         with open(file) as csvfile:
@@ -32,14 +34,16 @@ def import_csv(path):
                     domain = Domain(name=row[1])
                     session.add(domain)
                     session.commit()
-
     except OSError as error:
         print("Error in import path: ", error)
+    finally:
+        session.close()
 
 
 @cli.command()
 def status():
     """Return Scraped domain count and unscraped domain count"""
+    session = get_session()
     total_domains = session.query(Domain).count()
 
     scraped_domains = session.query(Domain).filter(
@@ -64,6 +68,7 @@ def status():
 
 @cli.command()
 def scrap():
+    session = get_session()
     domains = session.query(Domain).filter(
         Domain.expiration_date == None,
         Domain.person_id == None,
@@ -72,7 +77,9 @@ def scrap():
     for domain in domains:
         data = whois(domain)
 
-        save_internet_data(data)
+        save_internet_data(data, session)
+
+    session.close()
 
 
 if __name__ == '__main__':
