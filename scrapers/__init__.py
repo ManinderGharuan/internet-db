@@ -1,20 +1,20 @@
 from whois import whois
-from db.db import get_session
+from db import get_session
 from scrapers.top_1mScraper import top_1mScraper
 from scrapers import top_1million_sitesScraper
-from models.NewCountry import NewCountry
-from models.NewState import NewState
-from models.NewCity import NewCity
-from models.NewCountryStateCity import NewCountryStateCity
-from models.NewLocation import NewLocation
-from models.NewOrganization import NewOrganization
-from models.NewPerson import NewPerson
-from models.NewEmail import NewEmail
-from models.NewPersonEmails import NewPersonEmails
-from models.NewRegistrar import NewRegistrar
-from models.NewNameServer import NewNameServer
-from models.NewDomain import NewDomain
-from models.NewDomainNameServers import NewDomainNameServers
+from models.Country import Country
+from models.State import State
+from models.City import City
+from models.CountryStateCity import CountryStateCity
+from models.Location import Location
+from models.Organization import Organization
+from models.Person import Person
+from models.Email import Email
+from models.PersonEmails import PersonEmails
+from models.Registrar import Registrar
+from models.NameServer import NameServer
+from models.Domain import Domain
+from models.DomainNameServers import DomainNameServers
 
 session = get_session()
 
@@ -54,48 +54,112 @@ def save_internet_data(data):
     whois_server = data['whois_server']
     status = data['status']
 
-    ncountry = NewCountry(country_code, country).insert(session)
-    nstate = NewState(state).insert(session)
-    ncity = NewCity(city).insert(session)
+    if type(address) is list:
+        address = ', '.join(address)
 
-    ncsc = NewCountryStateCity(ncountry, nstate, ncity).insert(session)
+    if type(creation_date) is list:
+        creation_date = creation_date[0]
 
-    nlocation = NewLocation(address, ncsc, zip_code).insert(session)
-    norg = NewOrganization(org).insert(session)
-    nperson = NewPerson(person_name, nlocation, norg,
-                        person_phone_number).insert(session)
+    if type(updated_date) is list:
+        updated_date = updated_date[0]
+
+    if type(expiration_date) is list:
+        expiration_date = expiration_date[0]
+
+    new_country = Country(code=country_code, name=country)
+    session.add(new_country)
+    session.commit()
+
+    new_state = State(name=state)
+    session.add(new_state)
+    session.commit()
+
+    new_city = City(name=city)
+    session.add(new_city)
+    session.commit()
+
+    new_csc = CountryStateCity(
+        country=new_country,
+        state=new_state,
+        city=new_city)
+    session.add(new_csc)
+    session.commit()
+
+    new_location = Location(
+        address=address,
+        country_state_city=new_csc,
+        zip_code=zip_code)
+    new_org = Organization(name=org)
+    session.add(new_location)
+    session.commit()
+    session.add(new_org)
+    session.commit()
+
+    new_person = Person(
+        name=person_name,
+        location=new_location,
+        organization=new_org,
+        phone_number=person_phone_number)
+    session.add(new_person)
+    session.commit()
 
     for email in emails:
-        nemail = NewEmail(email).insert(session)
+        new_email = Email(email=email)
 
-        NewPersonEmails(nperson, nemail).insert(session)
+        pe = PersonEmails(person=new_person, email=new_email)
 
-    nregistrar = NewRegistrar(registrar, registrar_phone_number,
-                              registrar_url).insert(session)
+        session.add(new_email)
+        session.commit()
+        session.add(pe)
+        session.commit()
 
-    ndomains = []
-    nservers = []
+    new_registrar = Registrar(
+        name=registrar,
+        phone_number=registrar_phone_number,
+        url=registrar_url)
+
+    session.add(new_registrar)
+    session.commit()
+
+    new_domains = []
+    new_servers = []
 
     if type(domain_names) is not list:
         domain_names = [domain_names]
 
     for domain in domain_names:
-        ndomain = NewDomain(
-            domain, creation_date, updated_date,
-            expiration_date, nperson, nregistrar,
-            referral_url, whois_server, str(status)
-        ).insert(session)
+        new_domain = Domain(
+            name=domain,
+            creation_date=creation_date,
+            last_update_date=updated_date,
+            expiration_date=expiration_date,
+            person=new_person,
+            registrar=new_registrar,
+            referral_url=referral_url,
+            whois_server=whois_server,
+            status=str(status))
 
-        ndomains.append(ndomain)
+        new_domains.append(new_domain)
+
+        session.add(new_domain)
+        session.commit()
 
     for server in name_servers:
-        nserver = NewNameServer(server).insert(session)
+        new_server = NameServer(url=server)
 
-        nservers.append(nserver)
+        new_servers.append(new_server)
 
-    for domain in ndomains:
-        for server in nservers:
-            NewDomainNameServers(domain, server).insert(session)
+        session.add(new_server)
+        session.commit()
+
+    for domain in new_domains:
+        for server in new_servers:
+            dns = DomainNameServers(
+                domain=domain,
+                name_server=server)
+
+            session.add(dns)
+            session.commit()
 
 
 session.close()

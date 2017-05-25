@@ -2,8 +2,8 @@ from db import Base
 from sqlalchemy import Column, Integer, String
 
 
-class City(Base):
-    __tablename__ = 'city'
+class Email(Base):
+    __tablename__ = 'email'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
+    email = Column(String(100), nullable=False)

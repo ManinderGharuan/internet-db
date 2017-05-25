@@ -3,7 +3,7 @@ from csv import reader
 
 
 def top_1mScraper():
-    DIR = path.dirname(path.abspath(__file__))
+    DIR = path.dirname(path.dirname(path.abspath(__file__)))
     FILENAME = path.join(DIR, 'top-1m.csv')
 
     data = []

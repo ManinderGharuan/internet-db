@@ -2,8 +2,8 @@ from db import Base
 from sqlalchemy import Column, Integer, String
 
 
-class City(Base):
-    __tablename__ = 'city'
+class NameServer(Base):
+    __tablename__ = 'name_server'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
+    url = Column(String(200), nullable=False)
