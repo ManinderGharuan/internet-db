@@ -69,17 +69,23 @@ def status():
 @cli.command()
 def scrap():
     session = get_session()
+    domain = None
     domains = session.query(Domain).filter(
         Domain.expiration_date == None,
         Domain.person_id == None,
         Domain.registrar_id == None).all()
 
-    for domain in domains:
-        data = whois(domain)
+    try:
+        with click.progressbar(iterable=domains, show_pos=True) as bar:
+                for domain_object in bar:
+                    domain = domain_object.name
+                    data = whois(domain_object.name)
 
-        save_internet_data(data, session)
-
-    session.close()
+                    save_internet_data(data, session)
+    except Exception as error:
+        print("Exception in scrap command: ", error, "\nDomain is: ", domain)
+    finally:
+        session.close()
 
 
 @cli.command(name="import-country")
