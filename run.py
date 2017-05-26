@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import os
-from csv import reader
+from csv import reader, DictReader
 import click
 from whois import whois
 from scraper import save_internet_data
 from models.Domain import Domain
+from models.Country import Country
 from db import get_session
 
 
@@ -79,6 +80,33 @@ def scrap():
         save_internet_data(data, session)
 
     session.close()
+
+
+@cli.command(name="import-country")
+@click.argument('path', type=click.Path(exists=True))
+def import_country(path):
+    """Import file to save countries in database"""
+    file = os.path.abspath(path)
+    session = get_session()
+
+    try:
+        with open(file) as csvfile:
+            csv_reader = DictReader(csvfile)
+
+            with click.progressbar(iterable=csv_reader, show_pos=True) as bar:
+                for row in bar:
+                    country = session.query(Country) \
+                                    .filter(Country.name == row['Name'],
+                                            Country.code == row['Code']).first()
+
+                    if not country:
+                        country = Country(name=row['Name'], code=row['Code'])
+                        session.add(country)
+                        session.commit()
+    except OSError as error:
+        print("Error in import path: ", error)
+    finally:
+        session.close()
 
 
 if __name__ == '__main__':
