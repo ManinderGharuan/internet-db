@@ -9,7 +9,7 @@ class Person(Base):
     __tablename__ = 'person'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
+    name = Column(String(50))
     location_id = Column(Integer, ForeignKey('location.id'))
     organization_id = Column(Integer, ForeignKey('organization.id'))
     phone_number = Column(Integer)
