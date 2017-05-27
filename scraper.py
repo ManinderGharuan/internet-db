@@ -11,30 +11,27 @@ from models.Registrar import Registrar
 from models.NameServer import NameServer
 from models.Domain import Domain
 from models.DomainNameServers import DomainNameServers
+from unduplicate import unduplicate
 
 
 def save_internet_data(data, session):
-    country_code = data['country']
-    country = None
-    state = data['state']
-    city = data['city']
-    address = data['address']
-    zip_code = data['zipcode']
-    org = data['org']
-    person_name = data['name']
-    person_phone_number = None
-    emails = data['emails']
-    registrar = data['registrar']
-    registrar_phone_number = None
-    registrar_url = None
-    name_servers = data['name_servers']
-    domain_names = data['domain_name']
-    creation_date = data['creation_date']
-    updated_date = data['updated_date']
-    expiration_date = data['expiration_date']
-    referral_url = data['referral_url']
-    whois_server = data['whois_server']
-    status = data['status']
+    country_code = data.get('country')
+    state_name = data.get('state')
+    city_name = data.get('city')
+    address = data.get('address')
+    zip_code = data.get('zipcode')
+    org = data.get('org')
+    person_name = data.get('name')
+    emails = data.get('emails')
+    registrar = data.get('registrar')
+    name_servers = data.get('name_servers')
+    domain_names = data.get('domain_name')
+    creation_date = data.get('creation_date')
+    updated_date = data.get('updated_date')
+    expiration_date = data.get('expiration_date')
+    referral_url = data.get('referral_url')
+    whois_server = data.get('whois_server')
+    status = data.get('status')
 
     if type(address) is list:
         address = ', '.join(address)
@@ -48,97 +45,117 @@ def save_internet_data(data, session):
     if type(expiration_date) is list:
         expiration_date = expiration_date[0]
 
-    new_country = Country(code=country_code, name=country)
-    session.add(new_country)
-    session.commit()
+    if type(emails) is not list:
+        emails = [emails]
 
-    new_state = State(name=state)
-    session.add(new_state)
-    session.commit()
+    country = unduplicate(
+        session,
+        Country,
+        {'code': country_code}
+    )
 
-    new_city = City(name=city)
-    session.add(new_city)
-    session.commit()
+    state = unduplicate(
+        session,
+        State,
+        {'name': state_name}
+    )
 
-    new_csc = CountryStateCity(
-        country=new_country,
-        state=new_state,
-        city=new_city)
-    session.add(new_csc)
-    session.commit()
+    city = unduplicate(
+        session,
+        City,
+        {'name': city_name}
+    )
 
-    new_location = Location(
-        address=address,
-        country_state_city=new_csc,
-        zip_code=zip_code)
-    new_org = Organization(name=org)
-    session.add(new_location)
-    session.commit()
-    session.add(new_org)
-    session.commit()
+    csc = unduplicate(
+        session,
+        CountryStateCity,
+        {'country': country,
+         'state': state,
+         'city': city}
+    )
 
-    new_person = Person(
-        name=person_name,
-        location=new_location,
-        organization=new_org,
-        phone_number=person_phone_number)
-    session.add(new_person)
-    session.commit()
+    location = unduplicate(
+        session,
+        Location,
+        {'address': address,
+         'country_state_city': csc,
+         'zip_code': zip_code}
+    )
 
-    for email in emails:
-        new_email = Email(email=email)
+    org = unduplicate(
+        session,
+        Organization,
+        {'name': org}
+    )
 
-        pe = PersonEmails(person=new_person, email=new_email)
+    person = unduplicate(
+        session,
+        Person,
+        {'name': person_name,
+         'location': location,
+         'organization': org}
+    )
 
-        session.add(new_email)
-        session.commit()
-        session.add(pe)
-        session.commit()
+    for email_address in emails:
+        email = unduplicate(
+            session,
+            Email,
+            {'email': email_address}
+        )
 
-    new_registrar = Registrar(
-        name=registrar,
-        phone_number=registrar_phone_number,
-        url=registrar_url)
+        pe = unduplicate(
+            session,
+            PersonEmails,
+            {'person': person,
+             'email': email}
+        )
 
-    session.add(new_registrar)
-    session.commit()
+    rgst = unduplicate(
+        session,
+        Registrar,
+        {'name': registrar}
+    )
 
-    new_domains = []
-    new_servers = []
+    domains = []
+    servers = []
 
     if type(domain_names) is not list:
         domain_names = [domain_names]
 
-    for domain in domain_names:
-        new_domain = Domain(
-            name=domain,
-            creation_date=creation_date,
-            last_update_date=updated_date,
-            expiration_date=expiration_date,
-            person=new_person,
-            registrar=new_registrar,
-            referral_url=referral_url,
-            whois_server=whois_server,
-            status=str(status))
+    if type(name_servers) is not list:
+        name_servers = [name_servers]
 
-        new_domains.append(new_domain)
+    for domain_name in domain_names:
+        domain = unduplicate(
+            session,
+            Domain,
+            {'name': domain_name,
+             'creation_date': creation_date,
+             'last_update_date': updated_date,
+             'expiration_date': expiration_date,
+             'person': person,
+             'registrar': rgst,
+             'referral_url': referral_url,
+             'whois_server': whois_server,
+             'status': str(status)}
+        )
 
-        session.add(new_domain)
-        session.commit()
+        domains.append(domain)
 
-    for server in name_servers:
-        new_server = NameServer(url=server)
+    for server_name in name_servers:
+        server = unduplicate(
+            session,
+            NameServer,
+            {'url': server_name}
+        )
 
-        new_servers.append(new_server)
+        servers.append(server)
 
-        session.add(new_server)
-        session.commit()
-
-    for domain in new_domains:
-        for server in new_servers:
-            dns = DomainNameServers(
-                domain=domain,
-                name_server=server)
-
-            session.add(dns)
-            session.commit()
+    for domain_object in domains:
+        for server_object in servers:
+            dns = unduplicate(
+                session,
+                DomainNameServers,
+                {'domain': domain_object,
+                 'name_server': server_object}
+            )
