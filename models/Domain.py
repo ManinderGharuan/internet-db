@@ -9,7 +9,7 @@ class Domain(Base):
     __tablename__ = 'domain'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100))
     creation_date = Column(DateTime)
     last_update_date = Column(DateTime)
     expiration_date = Column(DateTime)
