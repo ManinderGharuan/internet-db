@@ -14,6 +14,9 @@ def unduplicate(session, table, data={}):
     if table_name == 'country':
         result = query.filter(table.code == data['code']).first()
 
+        if not result:
+            result = query.filter(table.name == data['code']).first()
+
     if table_name == 'domain':
         result = query.filter(table.name == data['name']).first()
 
