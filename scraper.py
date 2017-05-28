@@ -36,6 +36,12 @@ def save_internet_data(data, session):
     if type(address) is list:
         address = ', '.join(address)
 
+    if type(city_name) is list:
+        city_name = str(city_name)
+
+    if type(person_name) is list:
+        person_name = str(person_name)
+
     if type(creation_date) is list:
         creation_date = creation_date[0]
 
@@ -47,6 +53,12 @@ def save_internet_data(data, session):
 
     if type(emails) is not list:
         emails = [emails]
+
+    if type(org) is list:
+        org = str(org)
+
+    if type(zip_code) is list:
+        zip_code = str(zip_code)
 
     country = unduplicate(
         session,
