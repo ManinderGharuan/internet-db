@@ -1,3 +1,4 @@
+from dateutil.parser import parse
 from models.Country import Country
 from models.State import State
 from models.City import City
@@ -12,6 +13,18 @@ from models.NameServer import NameServer
 from models.Domain import Domain
 from models.DomainNameServers import DomainNameServers
 from unduplicate import unduplicate
+
+
+def _parse_datetime(string):
+    """
+    Returns datetime
+
+    Converts string into python datetime
+    """
+    try:
+        return parse(string, fuzzy=True)
+    except ValueError:
+        raise Exception("Unknown datetime format : ", string)
 
 
 def save_internet_data(data, session):
@@ -59,6 +72,15 @@ def save_internet_data(data, session):
 
     if type(zip_code) is list:
         zip_code = str(zip_code)
+
+    if type(creation_date) is str:
+        creation_date = _parse_datetime(creation_date)
+
+    if type(updated_date) is str:
+        updated_date = _parse_datetime(updated_date)
+
+    if type(expiration_date) is str:
+        expiration_date = _parse_datetime(expiration_date)
 
     country = unduplicate(
         session,
