@@ -47,12 +47,10 @@ def status():
     total_domains = session.query(Domain).count()
 
     scraped_domains = session.query(Domain).filter(
-        Domain.expiration_date != None,
         Domain.person_id != None,
         Domain.registrar_id != None).count()
 
     unscraped_domains = session.query(Domain).filter(
-        Domain.expiration_date == None,
         Domain.person_id == None,
         Domain.registrar_id == None).count()
 
@@ -71,7 +69,6 @@ def scrap():
     session = get_session()
     domain = None
     domains = session.query(Domain).filter(
-        Domain.expiration_date == None,
         Domain.person_id == None,
         Domain.registrar_id == None).all()
 
