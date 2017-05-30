@@ -27,7 +27,7 @@ def _parse_datetime(string):
         raise Exception("Unknown datetime format : ", string)
 
 
-def save_internet_data(data, session):
+def save_internet_data(domain, data, session):
     country_code = data.get('country')
     state_name = data.get('state')
     city_name = data.get('city')
@@ -38,7 +38,7 @@ def save_internet_data(data, session):
     emails = data.get('emails')
     registrar = data.get('registrar')
     name_servers = data.get('name_servers')
-    domain_names = data.get('domain_name')
+    domain_name = domain
     creation_date = data.get('creation_date')
     updated_date = data.get('updated_date')
     expiration_date = data.get('expiration_date')
@@ -137,7 +137,7 @@ def save_internet_data(data, session):
             {'email': email_address}
         )
 
-        pe = unduplicate(
+        unduplicate(
             session,
             PersonEmails,
             {'person': person,
@@ -150,17 +150,12 @@ def save_internet_data(data, session):
         {'name': registrar}
     )
 
-    domains = []
     servers = []
-
-    if type(domain_names) is not list:
-        domain_names = [domain_names]
 
     if type(name_servers) is not list:
         name_servers = [name_servers]
 
-    for domain_name in domain_names:
-        domain = unduplicate(
+    domain = unduplicate(
             session,
             Domain,
             {'name': domain_name,
@@ -174,8 +169,6 @@ def save_internet_data(data, session):
              'status': str(status)}
         )
 
-        domains.append(domain)
-
     for server_name in name_servers:
         server = unduplicate(
             session,
@@ -185,11 +178,10 @@ def save_internet_data(data, session):
 
         servers.append(server)
 
-    for domain_object in domains:
-        for server_object in servers:
-            dns = unduplicate(
-                session,
-                DomainNameServers,
-                {'domain': domain_object,
-                 'name_server': server_object}
-            )
+    for server_object in servers:
+        unduplicate(
+            session,
+            DomainNameServers,
+            {'domain': domain,
+             'name_server': server_object}
+        )

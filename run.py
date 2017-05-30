@@ -76,9 +76,9 @@ def scrap():
         with click.progressbar(iterable=domains, show_pos=True) as bar:
                 for domain_object in bar:
                     domain = domain_object.name
-                    data = whois(domain_object.name)
+                    data = whois(domain)
 
-                    save_internet_data(data, session)
+                    save_internet_data(domain, data, session)
     except Exception as error:
         print("Exception in scrap command: ", error, "\nDomain is: ", domain)
     finally:
