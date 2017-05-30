@@ -30,13 +30,11 @@ def unduplicate(session, table, data={}):
             result.whois_server = data['whois_server']
             result.status = data['status']
 
-            session.commit()
     else:
         result = query.filter_by(**data).first()
 
     if not result:
         result = table(**data)
         session.add(result)
-        session.commit()
 
     return result

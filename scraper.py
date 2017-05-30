@@ -185,3 +185,5 @@ def save_internet_data(domain, data, session):
             {'domain': domain,
              'name_server': server_object}
         )
+
+    session.commit()
