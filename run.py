@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import os
+from time import sleep
+from random import choice
 from csv import reader, DictReader
 import click
 from whois import whois
@@ -79,6 +81,7 @@ def scrap():
                     data = whois(domain)
 
                     save_internet_data(domain, data, session)
+                    sleep(choice(range(6, 10)))
     except Exception as error:
         print("Exception in scrap command: ", error, "\nDomain is: ", domain)
     finally:
