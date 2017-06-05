@@ -16,8 +16,7 @@ def unduplicate(session, table, data={}):
 
         if not result:
             result = query.filter(table.name == data['code']).first()
-
-    if table_name == 'domain':
+    elif table_name == 'domain':
         result = query.filter(table.name == data['name']).first()
 
         if result:
